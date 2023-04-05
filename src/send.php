@@ -25,7 +25,7 @@ $mail->send();
 
 <head>
     <meta charset="UTF-8" />
-    <title>TOP</title>
+    <title>送信完了</title>
 </head>
 
 <body>

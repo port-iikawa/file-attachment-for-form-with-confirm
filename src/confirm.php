@@ -2,7 +2,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>TOP</title>
+    <title>入力内容確認</title>
 </head>
 
 <body>
