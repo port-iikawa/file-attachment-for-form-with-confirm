@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web:
+    image: techblog/file-attachment-for-form-with-confirm/web
+    build: ./
+    container_name: 'techblog_file-attachment-for-form-with-confirm_web'
+    ports:
+      - 8080:80
+    working_dir: '/var/www/html'
+    volumes:
+      - ./php.ini:/usr/local/etc/php/php.ini
+      - ./src:/var/www/html
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
