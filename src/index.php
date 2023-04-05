@@ -8,7 +8,7 @@
 <body>
     <h1>フォームサンプル</h1>
     <p>STEP 1 - 入力</p>
-    <form action="./confirm.php" method="post">
+    <form action="./confirm.php" method="post" enctype="multipart/form-data">
         <table>
             <tr>
                 <th>お名前</th>
@@ -17,6 +17,10 @@
             <tr>
                 <th>問い合わせ内容</th>
                 <td><textarea name="content"></textarea></td>
+            </tr>
+            <tr>
+                <th>添付ファイル</th>
+                <td><input type="file" name="attachment_file" /></td>
             </tr>
         </table>
         <button type="submit" name="step" value="to_confirm">確認画面へ</button>
