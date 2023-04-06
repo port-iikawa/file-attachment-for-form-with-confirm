@@ -2,6 +2,17 @@
 class FileOperator {
     private static ?object $instance = null;
     private string $tmp_dir = '';
+    //許可するファイル拡張子と、MIMEタイプ
+    private array $allowed_extensions = [
+        '.pdf' => 'application/pdf',
+        '.ppt' => 'application/vnd.ms-powerpoint',
+        '.pptm' => 'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
+        '.pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        '.xls' => 'application/vnd.ms-excel',
+        '.xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        '.zip' => 'application/zip',
+    ];
+    private int $max_file_size_mb = 2;
 
     private function __construct() {
         //ファイルの一時格納を行うディレクトリを決定
@@ -25,16 +36,50 @@ class FileOperator {
     }
 
     public function upload_file(): array {
+        $return = ['result' => false, 'msg' => ''];
+
+        //添付ファイルが送信されているか確認
+        if (!isset($_FILES['attachment_file'])) {
+            $return['msg'] = 'ファイルが送られていません';
+            return $return;
+        }
+
         //index.phpから送られてきた添付ファイルの情報を取得
         $file_info = $_FILES['attachment_file'];
-
-        //ファイルの拡張子を取得
+        
+        //ファイル名に拡張子が含まれているか確認
         preg_match("/\.[^.]+$/", $file_info['name'], $extension_match);
+
+        if (empty($extension_match)) {
+            $return['msg'] = '拡張子が含まれていません';
+            return $return;
+        }
+
+        //拡張子が予め許可されたものに一致するか確認
         $extension = $extension_match[0];
+        if (!isset($this->allowed_extensions[$extension])) {
+            $return['msg'] = '許可されていない拡張子です';
+            return $return;
+        }
+
+        //拡張子に対して、MIMEタイプが正しいものか確認
+        if ($this->allowed_extensions[$extension] !== $file_info['type']) {
+            $return['msg'] = 'MIMEタイプが不正です';
+            return $return;
+        }
+
+        //予め定めたファイル容量内に収まっているか確認
+        $max_file_size_kb = $this->max_file_size_mb * 1024 * 1024;
+        if($file_info['size']  > $max_file_size_kb) {
+            $return['msg'] = "アップロード出来るファイルサイズは{$this->max_file_size_mb}MBまでです。";
+            return $return;
+        }
 
         //ファイルがサーバー内で予め決められた一時ディレクトリに正しくアップロードされているか確認
         if (!is_uploaded_file($file_info['tmp_name'])) {
-            return false;
+            $return['result'] = false;
+            $return['msg'] = 'ファイルのアップロードに失敗しました';
+            return $return;
         }
 
         //一時ファイルの名称を作成
@@ -43,11 +88,16 @@ class FileOperator {
         $rand = mt_rand();
         $file_name = $now_time . $rand . $extension;
 
-        //サーバー内で予め決められた一時ディレクトリから、このプログラムで利用する一時ディレクトリにファイルを移動
-        move_uploaded_file($file_info['tmp_name'], "{$this->tmp_dir}/{$file_name}");
+        //サーバー内で予め決められた一時ディレクトリから、このプログラムで利用する一時ディレクトリにファイルを移動出来たか確認
+        if (!move_uploaded_file($file_info['tmp_name'], "{$this->tmp_dir}/{$file_name}")) {
+            $return['msg'] = 'ファイルのアップロードに失敗しました';
+            return $return;
+        }
 
-        //アップロードされたファイル名と、一時ディレクトリに保存したファイル名をreturn
+        //アップロードされたファイル名と、一時ディレクトリに保存したファイル名、実行結果をreturn
         return [
+            'result' => true,
+            'msg' => 'ファイルのアップロードに成功しました',
             'upload_file_name' => $file_info['name'],
             'tmp_file_name' => $file_name
         ];
